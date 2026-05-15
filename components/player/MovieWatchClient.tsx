@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Sliders, MessageSquare, Maximize, X } from "lucide-react";
+import { ArrowLeft, Sliders, MessageSquare, Maximize, Users, X } from "lucide-react"; // Added Users icon
 
 import { NexusPlayer, StreamSource } from "@/components/player/NexusPlayer";
 import { VideoFilters } from "@/components/VideoFilters";
@@ -26,17 +26,18 @@ function ControlButton({ onClick, label, isActive, children }: { onClick: () => 
   );
 }
 
+// THIS IS THE CORRECTED INTERFACE
 interface MovieWatchClientProps {
   movie: MediaItem;
   sources: DynamicServerNode[];
+  roomCode?: string | null; // This property was missing
 }
 
-export function MovieWatchClient({ movie, sources }: MovieWatchClientProps) {
+export function MovieWatchClient({ movie, sources, roomCode }: MovieWatchClientProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [isNicoActive, setIsNicoActive] = useState(false);
   const [isCinemaMode, setIsCinemaMode] = useState(false);
 
-  // 100% BULLETPROOF TS FIX: We cast sources to any[] to bypass the missing "tier" type constraint
   const nexusSources: StreamSource[] = useMemo(() => {
     const rawSources: any[] = sources;
     return rawSources.map(s => ({
@@ -65,6 +66,25 @@ export function MovieWatchClient({ movie, sources }: MovieWatchClientProps) {
         <ControlButton label="Live Comments" isActive={isNicoActive} onClick={() => setIsNicoActive(!isNicoActive)}>
           <MessageSquare className="w-5 h-5"/>
         </ControlButton>
+        
+        {/* THIS IS THE NEW WATCH PARTY BUTTON */}
+        <ControlButton 
+            label={roomCode ? "Leave Party" : "Watch Party"} 
+            isActive={!!roomCode} 
+            onClick={() => {
+                if(roomCode) {
+                    // If in a room, redirect to the same page without the room param
+                    window.location.href = `/watch/movie/${movie.id}`;
+                } else {
+                    // If not in a room, create one and redirect
+                    const newRoomCode = `WP-${Math.floor(Math.random()*90000)+10000}`;
+                    window.location.href = `/watch/movie/${movie.id}?room=${newRoomCode}`;
+                }
+           }}
+        >
+           <Users className="w-5 h-5"/>
+        </ControlButton>
+        
         <ControlButton label={isCinemaMode ? "Exit Cinema" : "Cinema Mode"} isActive={isCinemaMode} onClick={() => setIsCinemaMode(!isCinemaMode)}>
            {isCinemaMode ? <X className="w-5 h-5"/> : <Maximize className="w-5 h-5" />}
         </ControlButton>
