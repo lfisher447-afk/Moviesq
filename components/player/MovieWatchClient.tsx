@@ -1,10 +1,11 @@
 'use client';
-import { useState } from "react";
+
+import { useMemo, useState } from "react"; // Added useMemo
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Sliders, MessageSquare, Maximize, X } from "lucide-react";
 
-import { NexusPlayer } from "@/components/player/NexusPlayer";
+import { NexusPlayer, StreamSource } from "@/components/player/NexusPlayer";
 import { VideoFilters } from "@/components/VideoFilters";
 import { AudioFilters } from "@/components/AudioFilters";
 import { NicoNicoComments } from "@/components/NicoNicoComments";
@@ -34,6 +35,17 @@ export function MovieWatchClient({ movie, sources }: MovieWatchClientProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [isNicoActive, setIsNicoActive] = useState(false);
   const [isCinemaMode, setIsCinemaMode] = useState(false);
+
+  // FIXED: Transform the DynamicServerNode[] from the server into the StreamSource[] the player expects.
+  // This is wrapped in useMemo for performance, so it only runs once.
+  const nexusSources: StreamSource[] = useMemo(() => 
+    sources.map(s => ({
+      serverId: s.id,
+      name: s.name,
+      url: s.build(movie.media_type || 'movie', movie.id),
+      isDirect: s.type === 'direct',
+      tier: s.tier,
+    })), [sources, movie.id, movie.media_type]);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -68,7 +80,7 @@ export function MovieWatchClient({ movie, sources }: MovieWatchClientProps) {
           >
             <div className="w-full h-full"> 
               <NexusPlayer 
-                sources={sources} 
+                sources={nexusSources} 
                 poster={movie.backdrop_path ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}` : undefined} 
                 mediaId={String(movie.id)}
                 title={movie.title}
@@ -91,7 +103,7 @@ export function MovieWatchClient({ movie, sources }: MovieWatchClientProps) {
         >
           <div className="relative w-full aspect-video">
             <NexusPlayer 
-              sources={sources} 
+              sources={nexusSources} 
               poster={movie.backdrop_path ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}` : undefined} 
               mediaId={String(movie.id)}
               title={movie.title}
