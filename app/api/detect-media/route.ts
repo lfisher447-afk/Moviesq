@@ -23,21 +23,16 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Expecting image to be a base64 string, potentially with data URI prefix
-    // e.g., "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA..."
-    // We need to extract the base64 part and the mime type
     
     let mimeType = "image/png";
     let base64Data = image;
 
-    // Try strict regex first (avoiding the /s flag for strict TS compiler compatibility)
+    // Use [\s\S]* to avoid strict TS compiler target issues with the /s flag
     const matches = image.match(/^data:([^;]+);base64,([\s\S]*)$/);
     if (matches) {
       mimeType = matches[1];
       base64Data = matches[2];
     } else if (image.includes("base64,")) {
-      // Fallback for less standard formats
       const parts = image.split("base64,", 2);
       if (parts.length === 2) {
         const meta = parts[0];
