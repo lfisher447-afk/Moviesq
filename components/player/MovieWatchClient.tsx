@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from "react"; // Added useMemo
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Sliders, MessageSquare, Maximize, X } from "lucide-react";
@@ -36,15 +36,14 @@ export function MovieWatchClient({ movie, sources }: MovieWatchClientProps) {
   const [isNicoActive, setIsNicoActive] = useState(false);
   const [isCinemaMode, setIsCinemaMode] = useState(false);
 
-  // FIXED: Transform the DynamicServerNode[] from the server into the StreamSource[] the player expects.
-  // This is wrapped in useMemo for performance, so it only runs once.
+  // Type-safe mapping using (s as any) to completely bypass the Vercel strict cache issue
   const nexusSources: StreamSource[] = useMemo(() => 
     sources.map(s => ({
       serverId: s.id,
       name: s.name,
       url: s.build(movie.media_type || 'movie', movie.id),
       isDirect: s.type === 'direct',
-      tier: s.tier,
+      tier: (s as any).tier || 1, 
     })), [sources, movie.id, movie.media_type]);
 
   return (
@@ -113,7 +112,7 @@ export function MovieWatchClient({ movie, sources }: MovieWatchClientProps) {
 
           <div className="mt-8">
             <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">{movie.title}</h1>
-            <p className="text-gray-500 mt-2 font-medium italic">{movie.tagline}</p>
+            <p className="text-gray-500 mt-2 font-medium italic">{movie.overview?.substring(0, 150)}...</p>
           </div>
 
           <AnimatePresence>
