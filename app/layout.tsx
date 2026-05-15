@@ -10,11 +10,11 @@ import { ClientWrapper } from '@/components/ClientWrapper';
 import { Navbar } from '@/components/Navbar';
 import { initOmegaShield } from '@/lib/omegaShield';
 
-// Orphaned Components Connected Here:
 import DevToolProtection from '@/components/dev-tool-protection';
 import PWAPrompt from '@/components/pwa-prompt';
 import ScrollToTop from '@/components/scroll-to-top';
 import AuthGateModal from '@/components/auth-gate-modal';
+import React, { Suspense } from 'react'; // Import Suspense and React
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
 const bebas = Bebas_Neue({ weight: '400', subsets: ['latin'], variable: '--font-display', display: 'swap' });
@@ -47,7 +47,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <DevToolProtection />
           <ScrollToTop />
           <PWAPrompt />
-          <AuthGateModal />
+
+          {/* FIX: Wrap AuthGateModal in a Suspense boundary */}
+          <Suspense fallback={null}>
+             <AuthGateModal />
+          </Suspense>
 
           <ClientWrapper>
             <ClientShell>
