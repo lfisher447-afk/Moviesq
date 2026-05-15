@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { discoverMovies, discoverTV } from "@/lib/tmdb"
 
 export const metadata: Metadata = {
-  title: "Discover | BingeBox - Watch Movies and TV Shows for free",
+  title: "Discover | BingeBox",
   description: "Discover movies and TV shows",
 }
 
@@ -42,7 +42,6 @@ export default function DiscoverPage({ searchParams }: DiscoverPageProps) {
         <h1 className="text-3xl font-bold mb-2 md:mb-0">
           Discover {mediaType === "movie" ? "Movies" : "TV Shows"}
         </h1>
-
         <div className="flex gap-4">
           <a
             href={`/discover?media_type=movie${
@@ -78,86 +77,49 @@ export default function DiscoverPage({ searchParams }: DiscoverPageProps) {
 
 async function DiscoverResults({ searchParams }: DiscoverPageProps) {
   const {
-    media_type = "movie",
-    page = "1",
-    sort_by = "popularity.desc",
-    with_genres,
-    year,
-    primary_release_year,
-    first_air_date_year,
-    "vote_average.gte": minRating,
-    with_original_language,
+    media_type = "movie", page = "1", sort_by = "popularity.desc",
+    with_genres, year, primary_release_year, first_air_date_year,
+    "vote_average.gte": minRating, with_original_language,
   } = searchParams
 
-  const params: Record<string, any> = {
-    page: Number(page),
-    sort_by,
-  }
+  const params: Record<string, any> = { page, sort_by }
 
   if (with_genres) params.with_genres = with_genres
+  if (minRating) params["vote_average.gte"] = minRating
+  if (with_original_language) params.with_original_language = with_original_language
 
   if (media_type === "movie") {
-    if (primary_release_year) {
-      params.primary_release_year = Number(primary_release_year)
-    } else if (year) {
-      params.primary_release_year = Number(year)
-    }
+    if (primary_release_year) params.primary_release_year = primary_release_year
+    else if (year) params.primary_release_year = year
   } else {
-    if (first_air_date_year) {
-      params.first_air_date_year = Number(first_air_date_year)
-    } else if (year) {
-      params.first_air_date_year = Number(year)
-    }
+    if (first_air_date_year) params.first_air_date_year = first_air_date_year
+    else if (year) params.first_air_date_year = year
   }
 
-  if (minRating) params["vote_average.gte"] = Number(minRating)
-  if (with_original_language)
-    params.with_original_language = with_original_language
-
   try {
-    const data =
-      media_type === "tv"
-        ? await discoverTV(params)
-        : await discoverMovies(params)
+    const data = media_type === "tv" ? await discoverTV(params) : await discoverMovies(params)
 
     return (
       <>
         {data.results?.length > 0 ? (
           <>
             <MediaGrid items={data.results} />
-            <MediaPagination
-              currentPage={Number(page)}
-              totalPages={Math.min(data.total_pages || 1, 500)}
-              totalResults={data.total_results || 0}
-            />
+            <MediaPagination currentPage={Number(page)} totalPages={Math.min(data.total_pages || 1, 500)} totalResults={data.total_results || 0} />
           </>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">
-              No results found. Try adjusting your filters.
-            </p>
-          </div>
+          <div className="text-center py-12"><p className="text-muted-foreground">No results found.</p></div>
         )}
       </>
     )
   } catch (error) {
-    console.error("Error fetching discover results:", error)
-    return (
-      <div className="text-center py-12">
-        <p className="text-destructive">
-          Error loading results. Please try again later.
-        </p>
-      </div>
-    )
+    return <div className="text-center py-12"><p className="text-destructive">Error loading results.</p></div>
   }
 }
 
 function GridSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-      {Array(20)
-        .fill(0)
-        .map((_, i) => (
+      {Array(20).fill(0).map((_, i) => (
           <div key={i} className="space-y-3">
             <Skeleton className="w-full aspect-[2/3] rounded-lg" />
             <Skeleton className="w-full h-4" />
