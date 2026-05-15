@@ -11,11 +11,11 @@ type MovieDetails = {
     poster_path: string;
     title?: string;
     name?: string;
-    overview: string;
+    overview?: string; // FIXED: Made optional to match the Movie type
     media_type?: string;
     credits?: { cast: any[] };
-    vote_average?: number; // FIXED: Added this property
-    release_date?: string; // FIXED: Added this property
+    vote_average?: number;
+    release_date?: string; 
 };
 
 export function HeroCarousel({ movies }: { movies: MovieDetails[] }) {
