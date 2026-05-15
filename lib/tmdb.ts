@@ -7,7 +7,7 @@ export async function fetchTMDB(endpoint: string, params: Record<string, any> = 
   
   Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        url.searchParams.set(key, String(value))
+        url.searchParams.set(key, String(value));
       }
   });
 
@@ -17,11 +17,12 @@ export async function fetchTMDB(endpoint: string, params: Record<string, any> = 
 }
 
 // Ensure all missing functions used by UI pages are exported properly
-export async function fetchPopularMovies(page = 1) { return fetchTMDB('/movie/popular', { page }); }
-export async function fetchTopRatedMovies(page = 1) { return fetchTMDB('/movie/top_rated', { page }); }
-export async function fetchUpcomingMovies(page = 1) { return fetchTMDB('/movie/upcoming', { page }); }
-export async function fetchNowPlayingMovies(page = 1) { return fetchTMDB('/movie/now_playing', { page }); }
-export async function fetchMovieDetails(id: number) { return fetchTMDB(`/movie/${id}`); }
+export async function fetchPopularMovies(page: number | string = 1) { return fetchTMDB('/movie/popular', { page }); }
+export async function fetchTopRatedMovies(page: number | string = 1) { return fetchTMDB('/movie/top_rated', { page }); }
+export async function fetchUpcomingMovies(page: number | string = 1) { return fetchTMDB('/movie/upcoming', { page }); }
+export async function fetchNowPlayingMovies(page: number | string = 1) { return fetchTMDB('/movie/now_playing', { page }); }
+export async function fetchMovieDetails(id: number) { return fetchTMDB(`/movie/${id}?append_to_response=credits,similar`); }
+export async function fetchTVDetails(id: number) { return fetchTMDB(`/tv/${id}?append_to_response=credits,similar`); }
 
 // Discover utilities
 export async function discoverMovies(params: any = {}) { return fetchTMDB('/discover/movie', params); }
@@ -31,11 +32,11 @@ export async function discoverTV(params: any = {}) { return fetchTMDB('/discover
 export async function searchMulti(query: string, page = 1) { return fetchTMDB('/search/multi', { query, page }); }
 
 // Trending
-export async function fetchTrending(page = 1) { return fetchTMDB('/trending/all/day', { page }); }
+export async function fetchTrending(page: number | string = 1) { return fetchTMDB('/trending/all/day', { page }); }
 
 // Genres
 export async function fetchGenres(mediaType: 'movie' | 'tv' = 'movie') { return fetchTMDB(`/genre/${mediaType}/list`); }
 
 // Reviews
-export async function fetchMovieReviews(id: number, page = 1) { return fetchTMDB(`/movie/${id}/reviews`, { page }); }
-export async function fetchTVReviews(id: number, page = 1) { return fetchTMDB(`/tv/${id}/reviews`, { page }); }
+export async function fetchMovieReviews(id: number, page: number | string = 1) { return fetchTMDB(`/movie/${id}/reviews`, { page }); }
+export async function fetchTVReviews(id: number, page: number | string = 1) { return fetchTMDB(`/tv/${id}/reviews`, { page }); }
