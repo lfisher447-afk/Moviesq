@@ -1,0 +1,86 @@
+'use client';
+// components/WatchPartyOverview.tsx
+// Lightweight room-code badge shown on the video player itself.
+// The full Discord-style overlay lives in WatchPartyOverlay.tsx.
+
+import { useEffect, useState } from 'react';
+import { Users, Copy, Check, Crown } from 'lucide-react';
+import { db } from '@/lib/firebase';
+import { doc, onSnapshot, setDoc, collection } from 'firebase/firestore';
+
+interface WatchPartyOverviewProps {
+  roomCode: string;
+  videoRef: React.RefObject<HTMLVideoElement | HTMLIFrameElement>;
+  isHostRef: React.MutableRefObject<boolean>;
+}
+
+export function WatchPartyOverview({ roomCode, videoRef, isHostRef }: WatchPartyOverviewProps) {
+  const [copied, setCopied] = useState(false);
+  const [active, setActive] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
+
+  useEffect(() => {
+    if (!roomCode) return;
+    setActive(true);
+    const roomRef = doc(db, 'rooms', roomCode);
+
+    // Sync playback state
+    const unsub = onSnapshot(roomRef, (snap) => {
+      if (!snap.exists()) {
+        isHostRef.current = true;
+        setDoc(roomRef, { playing: false, time: 0, ts: Date.now(), partyMode: 'chill', slowMode: 0 });
+        return;
+      }
+      try {
+        const el = videoRef.current as HTMLVideoElement;
+        if (!isHostRef.current && el && el.nodeName === 'VIDEO' && 'currentTime' in el) {
+          const data = snap.data();
+          const expected = data.playing ? data.time + (Date.now() - data.ts) / 1000 : data.time;
+          if (Math.abs(el.currentTime - expected) > 2) el.currentTime = expected;
+          if (data.playing && el.paused) el.play().catch(() => {});
+          if (!data.playing && !el.paused) el.pause();
+        }
+      } catch (_) {
+        // Cross-origin iframe — use postMessage bridge in production
+      }
+    });
+
+    // Member count listener
+    const unsub2 = onSnapshot(collection(db, 'rooms', roomCode, 'members'), snap => {
+      setMemberCount(snap.size);
+    });
+
+    return () => { unsub(); unsub2(); };
+  }, [roomCode, videoRef, isHostRef]);
+
+  if (!active) return null;
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="absolute top-4 left-4 z-50 flex gap-2 items-center">
+      <div className="flex items-center gap-2 bg-black/80 backdrop-blur-xl px-3 py-1.5 rounded-xl border border-brand/30 shadow-[0_0_20px_rgba(229,9,20,0.3)]">
+        {isHostRef.current && <Crown className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />}
+        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+        <Users className="w-3.5 h-3.5 text-white/70" />
+        <span className="text-[10px] font-black text-white tracking-widest">
+          {memberCount} · {roomCode}
+        </span>
+        <span className="text-[9px] font-black text-brand uppercase">
+          {isHostRef.current ? 'HOST' : 'GUEST'}
+        </span>
+      </div>
+      <button
+        onClick={copyLink}
+        className="flex items-center gap-1.5 bg-black/60 backdrop-blur-xl px-3 py-1.5 rounded-xl border border-white/20 text-[10px] font-black text-white hover:bg-white/10 transition-all"
+      >
+        {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+        {copied ? 'Copied!' : 'Invite'}
+      </button>
+    </div>
+  );
+}

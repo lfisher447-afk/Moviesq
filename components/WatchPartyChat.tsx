@@ -1,0 +1,25 @@
+'use client';
+// components/WatchPartyChat.tsx
+// Wraps WatchPartyOverlay for use in the movie page.
+// The movie page renders <WatchPartyChat roomCode={roomCode} />
+
+import { WatchPartyOverlay } from './WatchPartyOverlay';
+
+interface WatchPartyChatProps {
+  roomCode: string;
+}
+
+export function WatchPartyChat({ roomCode }: WatchPartyChatProps) {
+  return (
+    <WatchPartyOverlay
+      roomCode={roomCode}
+      onLeave={() => {
+        // Navigate back by stripping the room param from the URL
+        if (typeof window !== 'undefined') {
+          window.history.pushState({}, '', window.location.pathname);
+          window.location.reload();
+        }
+      }}
+    />
+  );
+}
