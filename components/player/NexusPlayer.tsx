@@ -11,38 +11,24 @@ import {
 interface StreamSource { serverId: string; name: string; url: string; isDirect: boolean; tier: number; }
 interface NexusPlayerProps { sources: StreamSource[]; poster?: string; mediaId: string; title?: string; }
 
-// FIX: Convert from a plain function to forwardRef so that parent components
-// (WatchPartyOverlay via page.tsx) can obtain a ref to the underlying <video>
-// element for playback sync (currentTime, play/pause). Without this, the ref
-// passed in from page.tsx was an empty ref pointing to nothing, silently
-// breaking all Watch Party sync operations.
 export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
     function NexusPlayer({ sources, poster, mediaId, title = "Unknown Title" }, externalRef) {
 
-    // Internal ref used by all the player logic below
     const videoRef = useRef<HTMLVideoElement>(null);
-
-    // FIX: useImperativeHandle wires the external ref (from the parent) to
-    // point at the same underlying <video> DOM node as our internal videoRef.
-    // This means WatchPartyOverlay can call externalRef.current.play(),
-    // .pause(), .currentTime, etc. and it will control the actual video.
     useImperativeHandle(externalRef, () => videoRef.current as HTMLVideoElement, []);
 
-    const canvasRef = useRef<HTMLCanvasElement>(null); // For Ambient Light
+    const canvasRef = useRef<HTMLCanvasElement>(null); 
     const containerRef = useRef<HTMLDivElement>(null);
     const hlsRef = useRef<Hls | null>(null);
 
-    // Audio Web API Logic
     const audioCtxRef = useRef<AudioContext | null>(null);
     const gainNodeRef = useRef<GainNode | null>(null);
 
-    // Source State
     const [blacklistedNodes, setBlacklistedNodes] = useState<string[]>([]);
     const availableSources = sources.filter(s => !blacklistedNodes.includes(s.serverId));
     const [activeIndex, setActiveIndex] = useState(0);
     const activeSource = availableSources[activeIndex];
 
-    // Playback States
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(1);
     const [progress, setProgress] = useState(0);
@@ -52,9 +38,8 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
     const [showControls, setShowControls] = useState(true);
     const [isLocked, setIsLocked] = useState(false);
 
-    // Advanced Engine States
     const [ambientMode, setAmbientMode] = useState(true);
-    const [audioBoost, setAudioBoost] = useState(false); // 200% Volume
+    const [audioBoost, setAudioBoost] = useState(false); 
     const [objectFit, setObjectFit] = useState<'contain' | 'cover' | 'fill'>('contain');
     const [playbackRate, setPlaybackRate] = useState(1);
     const [qualityLevels, setQualityLevels] = useState<{ height: number, index: number }[]>([]);
@@ -66,9 +51,6 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
     const [doubleTapAnim, setDoubleTapAnim] = useState<'left' | 'right' | null>(null);
     const timeoutRef = useRef<NodeJS.Timeout>();
 
-    // ========================================================================
-    // 1. INITIALIZATION & HLS ENGINE
-    // ========================================================================
     useEffect(() => {
         if (!activeSource || !activeSource.isDirect) { setLoading(false); return; }
         setLoading(true);
@@ -96,7 +78,6 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
                 if (defaultTime > 0) video.currentTime = defaultTime;
             });
 
-            // Nerd Stats Pipeline
             hls.on(Hls.Events.FRAG_CHANGED, (_, _data) => {
                 const lvl = hls.levels[hls.currentLevel];
                 if (lvl) setStats(s => ({ ...s, res: `${lvl.width}x${lvl.height}`, kbps: Math.round(lvl.bitrate / 1000) }));
@@ -109,7 +90,6 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
                 }
             });
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            // Safari / iOS Native HLS Fallback support
             video.src = activeSource.url;
             video.addEventListener('loadedmetadata', () => {
                 setLoading(false);
@@ -123,9 +103,6 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
         return () => hlsRef.current?.destroy();
     }, [activeIndex, activeSource, mediaId, availableSources.length]);
 
-    // ========================================================================
-    // 2. AMBIENT LIGHT ENGINE (Canvas Background Blur)
-    // ========================================================================
     useEffect(() => {
         let animationFrame: number;
         const renderAmbient = () => {
@@ -139,9 +116,6 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
         return () => cancelAnimationFrame(animationFrame);
     }, [ambientMode, isPlaying]);
 
-    // ========================================================================
-    // 3. WEB AUDIO EQ / GAIN ENGINE
-    // ========================================================================
     const initAudioBoost = () => {
         if (!videoRef.current || audioCtxRef.current) return;
         try {
@@ -153,18 +127,13 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
                 source.connect(gainNodeRef.current);
                 gainNodeRef.current.connect(audioCtxRef.current.destination);
             }
-        } catch (e) {
-            console.warn("Audio Context Failed to Init", e);
-        }
+        } catch (e) {}
     };
 
     useEffect(() => {
         if (gainNodeRef.current) gainNodeRef.current.gain.value = audioBoost ? 2.5 : 1.0;
     }, [audioBoost]);
 
-    // ========================================================================
-    // 4. MEDIASESSION API (OS Integrations)
-    // ========================================================================
     useEffect(() => {
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
@@ -176,9 +145,6 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
         }
     }, [title, poster]);
 
-    // ========================================================================
-    // 5. CORE CONTROLLER BINDINGS
-    // ========================================================================
     const togglePlay = useCallback(() => {
         if (!videoRef.current) return;
         initAudioBoost();
@@ -194,10 +160,7 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
             localStorage.setItem(`nexus_time_${mediaId}`, videoRef.current.currentTime.toString());
         }
 
-        // Cast to access non-standard getVideoPlaybackQuality without TS errors
-        const videoEl = videoRef.current as HTMLVideoElement & {
-            getVideoPlaybackQuality?: () => { droppedVideoFrames: number };
-        };
+        const videoEl = videoRef.current as HTMLVideoElement & { getVideoPlaybackQuality?: () => { droppedVideoFrames: number }; };
         if (typeof videoEl.getVideoPlaybackQuality === 'function') {
             const quality = videoEl.getVideoPlaybackQuality();
             if (quality) setStats(s => ({ ...s, dropped: quality.droppedVideoFrames }));
@@ -241,8 +204,7 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
         <div ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => isPlaying && !activeMenu && setShowControls(false)}
             className="relative w-full aspect-video bg-black rounded-[2rem] overflow-hidden group shadow-2xl border border-white/5 mx-auto transition-all duration-500">
 
-            {/* Ambient Canvas Layer */}
-            {ambientMode && <canvas ref={canvasRef} width="120" height="68" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] object-cover blur-3xl opacity-60 z-0 mix-blend-screen pointer-events-none transition-opacity duration-[2s]" />}
+            {ambientMode && <canvas ref={canvasRef} width="120" height="68" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] object-cover blur-3xl opacity-60 z-0 mix-blend-screen pointer-events-none transition-opacity duration-1000" />}
 
             {loading && (
                 <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/80 backdrop-blur-xl">
@@ -251,21 +213,17 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
                 </div>
             )}
 
-            {/* Smart Iframe Fallback (for non-direct/embed sources) */}
             {!activeSource?.isDirect && activeSource && (
                 <div className="absolute inset-0 z-10 w-full h-full pt-10 bg-black">
                     <iframe src={activeSource.url} className="w-full h-full border-none outline-none z-10" allowFullScreen />
                 </div>
             )}
 
-            {/* Native Cinematic Engine (HLS) */}
             {activeSource?.isDirect && (
                 <>
-                    {/* Double Tap Ghost Indicators */}
                     {doubleTapAnim === 'left' && <div className="absolute left-1/4 top-1/2 -translate-y-1/2 z-30 animate-pulse text-white/50"><Rewind className="w-20 h-20" /></div>}
                     {doubleTapAnim === 'right' && <div className="absolute right-1/4 top-1/2 -translate-y-1/2 z-30 animate-pulse text-white/50"><FastForward className="w-20 h-20" /></div>}
 
-                    {/* Telemetry HUD */}
                     {activeMenu === 'main' && stats.res && (
                         <div className="absolute top-6 left-6 z-40 bg-black/80 backdrop-blur-xl border border-indigo-500/30 p-4 rounded-2xl text-[10px] font-mono text-indigo-400 pointer-events-none shadow-2xl">
                             <p className="border-b border-indigo-500/30 pb-2 mb-2 font-bold text-white flex items-center gap-2"><Zap className="w-4 h-4" /> NEXUS_TELEMETRY</p>
@@ -277,7 +235,6 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
                         </div>
                     )}
 
-                    {/* Lock UI Mode Indicator */}
                     {isLocked && <button onClick={() => setIsLocked(false)} className="absolute top-6 right-6 z-50 bg-black/50 backdrop-blur p-3 rounded-full text-white/50 hover:text-white transition"><Lock className="w-6 h-6" /></button>}
 
                     <video
@@ -297,10 +254,9 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
                         }}
                     />
 
-                    {/* ADVANCED GLASSMORPHISM CONTROL HUD */}
-                    <div className={`absolute bottom-0 inset-x-0 z-40 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-6 px-10 transition-opacity duration-[400ms] ease-out flex flex-col gap-4 ${showControls && !isLocked ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+                    {/* DURATION WARNING FIX: transition-opacity duration-500 */}
+                    <div className={`absolute bottom-0 inset-x-0 z-40 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-6 px-10 transition-opacity duration-500 ease-out flex flex-col gap-4 ${showControls && !isLocked ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
 
-                        {/* Title & Scrubber */}
                         <div className="flex flex-col mb-1 text-white">
                             <h2 className="text-sm font-semibold tracking-wide drop-shadow-md">{title}</h2>
                             <div className="flex items-center gap-4 text-xs font-medium text-white/80 mt-2">
@@ -315,10 +271,7 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
                             </div>
                         </div>
 
-                        {/* Button Dock */}
                         <div className="flex items-center justify-between text-white">
-
-                            {/* Left: Play/Vol */}
                             <div className="flex items-center gap-6">
                                 <button onClick={togglePlay} className="hover:text-indigo-400 hover:scale-110 transition-all drop-shadow-lg">
                                     {isPlaying ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current translate-x-0.5" />}
@@ -338,9 +291,7 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
                                 </div>
                             </div>
 
-                            {/* Right: Tools & Hub */}
                             <div className="flex items-center gap-5 relative">
-
                                 <div className="relative">
                                     <button onClick={() => setActiveMenu(activeMenu ? null : 'main')} className={`hover:text-indigo-400 p-2 rounded-full hover:bg-white/10 transition-all ${activeMenu && 'rotate-90 text-indigo-400 bg-white/10'}`}>
                                         <Settings className="w-5 h-5" />
@@ -348,7 +299,6 @@ export const NexusPlayer = forwardRef<HTMLVideoElement, NexusPlayerProps>(
 
                                     {activeMenu && (
                                         <div className="absolute bottom-14 right-0 w-52 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col gap-1 z-50 text-sm overflow-hidden text-white/90 origin-bottom-right animate-in fade-in zoom-in-95 duration-200">
-
                                             {activeMenu === 'main' && (
                                                 <>
                                                     <button onClick={() => setActiveMenu('quality')} className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/10 flex justify-between items-center transition">Quality <span className="text-xs text-white/50">{currentQuality === 'auto' ? 'Auto' : `${currentQuality}p`}</span></button>
