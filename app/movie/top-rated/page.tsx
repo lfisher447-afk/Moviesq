@@ -26,7 +26,7 @@ async function TopRatedMoviesGrid() {
   const movies = await fetchTopRatedMovies()
   return (
     <MediaGrid
-      items={movies.results.map((item) => ({ ...item, media_type: "movie" }))}
+      items={movies.results.map((item: any) => ({ ...item, media_type: "movie" }))}
     />
   )
 }
