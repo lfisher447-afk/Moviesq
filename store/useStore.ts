@@ -26,6 +26,7 @@ interface AppState {
   setAudioFilters: (filters: Partial<AudioFilters>) => void;
   toggleWatchlist: (m: any) => void;
   addToHistory: (m: any) => void;
+  clearHistory: () => void;
   toggleBatterySaver: () => void;
 }
 
@@ -61,7 +62,8 @@ export const useStore = create<AppState>()(
         const st = get().stats;
         const newStats = { movies: m.type==='movie' ? st.movies+1 : st.movies, episodes: m.type==='tv' ? st.episodes+1 : st.episodes, hoursWatched: st.hoursWatched + (m.runtime ? m.runtime/60 : 1.0) };
         set({ history:[{ ...m, watchedAt: Date.now(), bookmark: 0 }, ...h].slice(0, 100), stats: newStats });
-      }
+      },
+      clearHistory: () => set({ history: [] })
     }),
     { name: 'omnimux-system-core-v12' }
   )
