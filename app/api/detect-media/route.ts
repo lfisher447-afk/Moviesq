@@ -31,8 +31,8 @@ export async function POST(req: NextRequest) {
     let mimeType = "image/png";
     let base64Data = image;
 
-    // Try strict regex first
-    const matches = image.match(/^data:([^;]+);base64,(.*)$/s);
+    // Try strict regex first (avoiding the /s flag for strict TS compiler compatibility)
+    const matches = image.match(/^data:([^;]+);base64,([\s\S]*)$/);
     if (matches) {
       mimeType = matches[1];
       base64Data = matches[2];
