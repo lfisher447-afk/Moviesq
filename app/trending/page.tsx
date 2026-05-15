@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
-import MediaPagination from "@/app/components/media-pagination"
+import MediaPagination from "@/components/media-pagination"
 import MediaGrid from "@/components/media-grid"
 import { Skeleton } from "@/components/ui/skeleton"
 import { fetchTrending } from "@/lib/tmdb"
