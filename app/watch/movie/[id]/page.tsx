@@ -2,23 +2,29 @@ import { notFound } from "next/navigation";
 import { fetchMovieDetails } from "@/lib/tmdb";
 import { OmnimuxRouter } from "@/lib/servers";
 import { MovieWatchClient } from "@/components/player/MovieWatchClient";
+import { WatchPartyChat } from "@/components/WatchPartyChat";
 
-export default async function WatchMoviePage({ params }: { params: { id: string } }) {
+export default async function WatchMoviePage({ params, searchParams }: { params: { id: string }, searchParams: { room?: string } }) {
   const movieId = Number.parseInt(params.id);
   if (isNaN(movieId)) notFound();
 
-  // Fetch movie data and optimal stream sources in parallel on the server
+  // Parallel data fetching
   const [movie, sources] = await Promise.all([
     fetchMovieDetails(movieId),
-    OmnimuxRouter.getOptimalRoute() // Uses server logic to find the best stream URLs
+    OmnimuxRouter.getOptimalRoute()
   ]);
 
   if (!movie || !movie.id || movie.success === false) {
     notFound();
   }
   
-  // Hand off all server-fetched data to the interactive client component
+  // Extract room parameter (if watching in a group)
+  const roomCode = searchParams.room || null;
+
   return (
-    <MovieWatchClient movie={movie} sources={sources} />
+    <>
+      <MovieWatchClient movie={movie} sources={sources} roomCode={roomCode} />
+      {roomCode && <WatchPartyChat roomCode={roomCode} />}
+    </>
   );
 }
