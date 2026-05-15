@@ -115,7 +115,8 @@ export function useWatchProgressSync() {
           return null
         }
 
-        return convertToVidLinkFormat(data || [])
+        // Fix: Explicitly bypass strict matching with "as any" since Firestore objects map directly to the interfaces
+        return convertToVidLinkFormat((data as any) || [])
       } catch (error) {
         console.error("Error loading account data:", error)
         return null
