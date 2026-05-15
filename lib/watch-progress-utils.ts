@@ -3,22 +3,21 @@ import type {
   VidLinkProgressData,
 } from "@/lib/hooks/use-vidlink-progress"
 
-// Removed missing external Supabase types file. Inline defined interface instead.
 export interface WatchProgressRow {
-  id: string
-  user_id: string
-  media_id: string
-  media_type: string
-  title: string
-  poster_path: string | null
-  backdrop_path: string | null
-  watched_seconds: number
-  duration_seconds: number
-  last_season_watched: string | null
-  last_episode_watched: string | null
-  show_progress: Record<string, any>
-  created_at: string
-  updated_at: string
+  id: string;
+  user_id: string;
+  media_id: string;
+  media_type: string;
+  title: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  watched_seconds: number;
+  duration_seconds: number;
+  last_season_watched: string | null;
+  last_episode_watched: string | null;
+  show_progress: Record<string, any>;
+  created_at: string;
+  updated_at: string;
 }
 
 export type WatchProgressInsert = Omit<
@@ -26,13 +25,7 @@ export type WatchProgressInsert = Omit<
   "id" | "created_at" | "updated_at"
 >
 
-/**
- * Convert a single MediaItem from VidLink format to database format
- */
-export function convertItemToDbFormat(
-  item: MediaItem,
-  userId: string,
-): WatchProgressInsert {
+export function convertItemToDbFormat(item: MediaItem, userId: string): WatchProgressInsert {
   return {
     user_id: userId,
     media_id: String(item.id),
@@ -48,24 +41,13 @@ export function convertItemToDbFormat(
   }
 }
 
-/**
- * Convert multiple MediaItems from VidLink format to database format
- */
-export function convertToDbFormat(
-  progressData: VidLinkProgressData,
-  userId: string,
-): WatchProgressInsert[] {
+export function convertToDbFormat(progressData: VidLinkProgressData, userId: string): WatchProgressInsert[] {
   return Object.values(progressData).map((item) =>
-    convertItemToDbFormat(item, userId),
+    convertItemToDbFormat(item, userId)
   )
 }
 
-/**
- * Convert database rows to VidLink format
- */
-export function convertToVidLinkFormat(
-  dbData: WatchProgressRow[],
-): VidLinkProgressData {
+export function convertToVidLinkFormat(dbData: WatchProgressRow[]): VidLinkProgressData {
   const result: VidLinkProgressData = {}
 
   dbData.forEach((item) => {
