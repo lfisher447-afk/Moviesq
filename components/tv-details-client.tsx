@@ -3,6 +3,7 @@
 import { CalendarIcon, Clock, InfoIcon, Play, Star, Tv } from "lucide-react"
 import Link from "next/link"
 import { useState, useTransition } from "react"
+import { notFound } from "next/navigation"
 
 import CastSection from "@/components/cast-section"
 import DownloadModal from "@/components/download-modal"
@@ -25,7 +26,6 @@ import { useVidlinkProgress } from "@/lib/hooks/use-vidlink-progress"
 import { MediaItem, Review, ReviewResponse } from "@/lib/types"
 import { cn, getLanguageName } from "@/lib/utils"
 import { DEFAULT_WATCH_SOURCE, EXACT_RESUME_SOURCE } from "@/lib/watch-sources"
-import NotFound from "@/app/not-found"
 
 interface TVShowDetailsClientProps {
   id: number
@@ -96,12 +96,11 @@ export default function TVShowDetailsClient({
     (person) => person.job === "Creator" || person.job === "Executive Producer",
   )
 
-  // Check if TV show is in continue watching
   const showProgress = getMediaProgress(id)
   const isInContinueWatching =
     showProgress &&
     ((showProgress.last_season_watched && showProgress.last_episode_watched) ||
-      showProgress.progress?.watched > 0)
+      (showProgress.progress && showProgress.progress.watched > 0))
   const isProgressLoading = progressData === null
 
   let watchPath = `/watch/tv/${id}/season/1/episode/1?source=${DEFAULT_WATCH_SOURCE}`
@@ -120,7 +119,7 @@ export default function TVShowDetailsClient({
   }
 
   if (show.adult) {
-    return <NotFound />
+    notFound()
   }
 
   return (
