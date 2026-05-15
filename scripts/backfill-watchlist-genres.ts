@@ -1,6 +1,3 @@
-// Run this script with: npx tsx scripts/backfill-watchlist-genres.ts
-// Make sure your .env.local file has NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and TMDB_API_KEY
-
 import { createClient } from "@supabase/supabase-js"
 import { config } from "dotenv"
 
