@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
-import MediaFilters from "@/app/components/media-filters"
-import MediaPagination from "@/app/components/media-pagination"
+import MediaFilters from "@/components/media-filters"
+import MediaPagination from "@/components/media-pagination"
 import MediaGrid from "@/components/media-grid"
 import { Skeleton } from "@/components/ui/skeleton"
 import { discoverMovies, discoverTV } from "@/lib/tmdb"
@@ -89,8 +89,6 @@ async function DiscoverResults({ searchParams }: DiscoverPageProps) {
     with_original_language,
   } = searchParams
 
-  // Call TMDB directly from the server component instead of going through our API route
-  // This is more efficient as it avoids an extra HTTP request
   const params: Record<string, any> = {
     page: Number(page),
     sort_by,
@@ -129,7 +127,7 @@ async function DiscoverResults({ searchParams }: DiscoverPageProps) {
             <MediaGrid items={data.results} />
             <MediaPagination
               currentPage={Number(page)}
-              totalPages={Math.min(data.total_pages || 1, 500)} // TMDB API has a limit of 500 pages
+              totalPages={Math.min(data.total_pages || 1, 500)}
               totalResults={data.total_results || 0}
             />
           </>
