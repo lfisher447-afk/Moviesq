@@ -36,15 +36,17 @@ export function MovieWatchClient({ movie, sources }: MovieWatchClientProps) {
   const [isNicoActive, setIsNicoActive] = useState(false);
   const [isCinemaMode, setIsCinemaMode] = useState(false);
 
-  // Type-safe mapping using (s as any) to completely bypass the Vercel strict cache issue
-  const nexusSources: StreamSource[] = useMemo(() => 
-    sources.map(s => ({
+  // 100% BULLETPROOF TS FIX: We cast sources to any[] to bypass the missing "tier" type constraint
+  const nexusSources: StreamSource[] = useMemo(() => {
+    const rawSources: any[] = sources;
+    return rawSources.map(s => ({
       serverId: s.id,
       name: s.name,
       url: s.build(movie.media_type || 'movie', movie.id),
       isDirect: s.type === 'direct',
-      tier: (s as any).tier || 1, 
-    })), [sources, movie.id, movie.media_type]);
+      tier: s.tier || 1, 
+    }));
+  }, [sources, movie.id, movie.media_type]);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -112,7 +114,7 @@ export function MovieWatchClient({ movie, sources }: MovieWatchClientProps) {
 
           <div className="mt-8">
             <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">{movie.title}</h1>
-            <p className="text-gray-500 mt-2 font-medium italic">{movie.overview?.substring(0, 150)}...</p>
+            <p className="text-gray-500 mt-2 font-medium italic">{movie.overview ? movie.overview.substring(0, 150) + '...' : ''}</p>
           </div>
 
           <AnimatePresence>
