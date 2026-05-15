@@ -215,14 +215,30 @@ function buildFromChain(tableName: string) {
       }
     },
 
-    async delete(): Promise<{ error: any }> {
-      try {
-        const snap = await runQuery()
-        await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)))
-        return { error: null }
-      } catch (err: any) {
-        return { error: { message: err.message } }
+    // Fixed: Returning a chain object for delete instead of a raw Promise
+    delete() {
+      const deleteChain = {
+        eq(field: string, value: any) {
+          filters.push({ field, value })
+          return deleteChain
+        },
+        then(
+          resolve: (v: { error: any }) => any,
+          reject?: (e: any) => any
+        ) {
+          return runQuery()
+            .then(async (snap) => {
+              await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)))
+              return resolve({ error: null })
+            })
+            .catch((err) => {
+              const result = { error: { message: err.message } }
+              return reject ? reject(result) : resolve(result)
+            })
+        },
       }
+
+      return deleteChain
     },
 
     update(payload: AnyRecord) {
