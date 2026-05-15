@@ -5,7 +5,6 @@ export async function createClient() {
   return createSyncClient()
 }
 
-// Bypassing specific Next.js app router cookie logic which gets invoked by standard supabase-js wrappers
 export async function createRouteHandlerClient() {
   return createSyncClient()
 }
