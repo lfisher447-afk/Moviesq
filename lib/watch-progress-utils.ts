@@ -2,9 +2,25 @@ import type {
   MediaItem,
   VidLinkProgressData,
 } from "@/lib/hooks/use-vidlink-progress"
-import type { Tables } from "@/lib/supabase/database.types"
 
-export type WatchProgressRow = Tables<"watch_progress">
+// Removed missing external Supabase types file. Inline defined interface instead.
+export interface WatchProgressRow {
+  id: string
+  user_id: string
+  media_id: string
+  media_type: string
+  title: string
+  poster_path: string | null
+  backdrop_path: string | null
+  watched_seconds: number
+  duration_seconds: number
+  last_season_watched: string | null
+  last_episode_watched: string | null
+  show_progress: Record<string, any>
+  created_at: string
+  updated_at: string
+}
+
 export type WatchProgressInsert = Omit<
   WatchProgressRow,
   "id" | "created_at" | "updated_at"
