@@ -3,6 +3,7 @@
 import { CalendarIcon, Clock, Film, Play, Star } from "lucide-react"
 import Link from "next/link"
 import { useState, useTransition } from "react"
+import { notFound } from "next/navigation"
 
 import CastSection from "@/components/cast-section"
 import DownloadModal from "@/components/download-modal"
@@ -19,7 +20,6 @@ import { useVidlinkProgress } from "@/lib/hooks/use-vidlink-progress"
 import { MediaItem, Review, ReviewResponse } from "@/lib/types"
 import { getLanguageName } from "@/lib/utils"
 import { DEFAULT_WATCH_SOURCE, EXACT_RESUME_SOURCE } from "@/lib/watch-sources"
-import NotFound from "@/app/not-found"
 
 interface MovieDetailsClientProps {
   id: number
@@ -87,10 +87,9 @@ export default function MovieDetailsClient({
   const similarMovies = movie.similar?.results || []
   const director = crew.find((person) => person.job === "Director")
 
-  // Check if movie is in continue watching
   const movieProgress = getMediaProgress(id)
   const isInContinueWatching =
-    movieProgress && movieProgress.progress?.watched > 0
+    movieProgress && movieProgress.progress && movieProgress.progress.watched > 0
   const isProgressLoading = progressData === null
 
   let watchPath = `/watch/movie/${id}?source=${DEFAULT_WATCH_SOURCE}`
@@ -103,7 +102,7 @@ export default function MovieDetailsClient({
   }
 
   if (movie.adult) {
-    return <NotFound />
+    notFound()
   }
 
   return (
