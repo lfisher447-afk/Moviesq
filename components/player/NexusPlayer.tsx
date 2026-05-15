@@ -7,10 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Hls from 'hls.js';
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize, Settings, Activity,
-  PictureInPicture2, FastForward, Rewind, ClosedCaptioning, CornerDownLeft,
+  PictureInPicture2, FastForward, Rewind, Subtitles, CornerDownLeft,
   Zap, ChevronRight, Gauge, Lock, Unlock, AlertTriangle
 } from 'lucide-react';
-import { cn } from '@/lib/utils'; // Make sure you have this utility function
+import { cn } from '@/lib/utils'; 
 
 // Export the interface to be used by parent components
 export interface StreamSource {
@@ -156,8 +156,12 @@ function NexusPlayer({
   
   const togglePiP = useCallback(async () => {
     if (!videoRef.current) return;
-    if (document.pictureInPictureElement) await document.exitPictureInPicture();
-    else await videoRef.current.requestPictureInPicture();
+    try {
+      if (document.pictureInPictureElement) await document.exitPictureInPicture();
+      else await videoRef.current.requestPictureInPicture();
+    } catch (error) {
+      console.error("PiP failed: ", error);
+    }
   }, []);
 
   // --- UI & KEYBOARD SHORTCUTS ---
@@ -294,11 +298,13 @@ function NexusPlayer({
                         <div className="flex items-center justify-between mt-2 text-white">
                             {/* Left Controls */}
                             <div className="flex items-center gap-4">
-                               <button onClick={togglePlay}>{isPlaying ? <Pause className="w-6 h-6"/> : <Play className="w-6 h-6"/>}</button>
-                               <button onClick={() => seek(-10)}><Rewind className="w-5 h-5"/></button>
-                               <button onClick={() => seek(10)}><FastForward className="w-5 h-5"/></button>
+                               <button onClick={togglePlay} className="hover:scale-110 transition-all drop-shadow-lg text-white">
+                                   {isPlaying ? <Pause className="w-6 h-6"/> : <Play className="w-6 h-6"/>}
+                               </button>
+                               <button onClick={() => seek(-10)} className="hover:text-indigo-400 transition-colors"><Rewind className="w-5 h-5"/></button>
+                               <button onClick={() => seek(10)} className="hover:text-indigo-400 transition-colors"><FastForward className="w-5 h-5"/></button>
                                <div className="flex items-center gap-2 group/volume">
-                                  <button onClick={() => videoRef.current && (videoRef.current.muted = !videoRef.current.muted)}>
+                                  <button onClick={() => videoRef.current && (videoRef.current.muted = !videoRef.current.muted)} className="hover:text-indigo-400 transition-colors">
                                     {isMuted || volume === 0 ? <VolumeX className="w-5 h-5"/> : <Volume2 className="w-5 h-5"/>}
                                   </button>
                                   <input type="range" min="0" max="1" step="0.05" value={isMuted ? 0 : volume}
@@ -309,7 +315,7 @@ function NexusPlayer({
                                         videoRef.current.muted = newVol === 0;
                                       }
                                     }}
-                                    className="w-0 opacity-0 group-hover/volume:w-20 group-hover/volume:opacity-100 transition-all duration-300 accent-indigo-500"
+                                    className="w-0 opacity-0 group-hover/volume:w-20 group-hover/volume:opacity-100 transition-all cursor-pointer h-1.5 bg-white/30 backdrop-blur rounded-lg accent-indigo-500 appearance-none"
                                     style={{accentColor: primaryColor}}
                                   />
                                </div>
@@ -319,8 +325,8 @@ function NexusPlayer({
                              {/* Right Controls */}
                             <div className="flex items-center gap-4 relative">
                                 <button onClick={() => setActiveMenu(activeMenu ? null : 'main')} className={cn("transition-colors", activeMenu && 'text-indigo-400')}><Settings className="w-5 h-5"/></button>
-                                <button onClick={togglePiP} className={cn("hidden sm:block", isPip && 'text-indigo-400')}><PictureInPicture2 className="w-5 h-5"/></button>
-                                <button onClick={toggleFullScreen}>{isFullScreen ? <Minimize className="w-5 h-5"/> : <Maximize className="w-5 h-5"/>}</button>
+                                <button onClick={togglePiP} className={cn("hidden sm:block hover:text-indigo-400 transition-colors", isPip && 'text-indigo-400')} title="Popup Player (PiP)"><PictureInPicture2 className="w-5 h-5"/></button>
+                                <button onClick={toggleFullScreen} className="hover:text-indigo-400 transition-colors">{isFullScreen ? <Minimize className="w-5 h-5"/> : <Maximize className="w-5 h-5"/>}</button>
                                 
                                 <AnimatePresence>
                                 {activeMenu && (
@@ -334,9 +340,9 @@ function NexusPlayer({
                                     {activeMenu === 'main' && (
                                        <>
                                         <MenuItem onClick={() => setActiveMenu('quality')} label="Quality" value={currentQuality === -1 ? 'Auto' : `${qualityLevels[currentQuality]?.height}p`} icon={Zap} />
-                                        <MenuItem onClick={() => setActiveMenu('subtitles')} label="Subtitles" value={subtitleTracks[activeSubtitleTrack]?.name || 'Off'} icon={ClosedCaptioning} />
+                                        <MenuItem onClick={() => setActiveMenu('subtitles')} label="Subtitles" value={subtitleTracks[activeSubtitleTrack]?.name || 'Off'} icon={Subtitles} />
                                         <MenuItem onClick={() => setActiveMenu('speed')} label="Playback Speed" value={`${playbackRate}x`} icon={Gauge}/>
-                                        <MenuItem onClick={() => setActiveMenu('servers')} label="Stream Server" value={activeSource.name} icon={Activity} />
+                                        <MenuItem onClick={() => setActiveMenu('servers')} label="Stream Server" value={activeSource?.name || 'Default'} icon={Activity} />
                                        </>
                                     )}
 
