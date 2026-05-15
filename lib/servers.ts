@@ -21,6 +21,7 @@ export interface ServerNode {
   maxQuality: VideoQuality; 
   tags: string[];          
   regionData: string;      // Simulated GeoRouting identifier
+  tier: number;            // Routing tier for player compatibility
   build: (type: MediaType, id: string | number, season?: number | string, episode?: number | string) => string;
 }
 
@@ -55,28 +56,27 @@ const resolveCoreProxy = (id: string | number): string => CORE_HLS_NODES[fnv1aHa
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const sanitize = (val: any): string => encodeURIComponent(String(val || '1').trim());
-const padNum = (val: any): string => { const n = parseInt(String(val), 10); return isNaN(n) ? '01' : n < 10 ? `0${n}` : String(n); };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 4. THE MASTER SERVER REGISTRY (15 Nodes)
+// 4. THE MASTER SERVER REGISTRY (12 Nodes)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export const SERVERS: ServerNode[] =[
   // ── TIER 1: CORE NEURAL NETWORKS ──
   {
-    id: 'omnimux-core', name: 'Omnimux Core Proxy', badge: '👑', type: 'direct',
+    id: 'omnimux-core', name: 'Omnimux Core Proxy', badge: '👑', type: 'direct', tier: 1,
     reliability: 99.9, baseLatency: 18, isAdFree: true, hasSubtitles: true, maxQuality: '4K',
     tags: ['Direct DSP', 'No CORS', 'Auto-Scale'], regionData: 'GLOBAL', 
     build: (t, id) => `/api/stream?url=${encodeURIComponent(resolveCoreProxy(id))}`
   },
   {
-    id: 'webtorrent', name: 'WebTorrent Backbone', badge: '🧲', type: 'torrent',
+    id: 'webtorrent', name: 'WebTorrent Backbone', badge: '🧲', type: 'torrent', tier: 1,
     reliability: 96.5, baseLatency: 150, isAdFree: true, hasSubtitles: false, maxQuality: 'IMAX Enhanced',
     tags: ['P2P ICE', 'Decentralized', 'Zero Log'], regionData: 'SWARM', 
     build: () => 'magnet_prompt' 
   },
   {
-    id: 'ipfs-mesh', name: 'IPFS Interplanetary', badge: '🌌', type: 'ipfs',
+    id: 'ipfs-mesh', name: 'IPFS Interplanetary', badge: '🌌', type: 'ipfs', tier: 1,
     reliability: 91.0, baseLatency: 280, isAdFree: true, hasSubtitles: false, maxQuality: '4K',
     tags: ['Blockchain', 'Uncensorable'], regionData: 'DECENTRAL', 
     build: () => 'ipfs_prompt'
@@ -84,19 +84,19 @@ export const SERVERS: ServerNode[] =[
 
   // ── TIER 2: HIGH-BANDWIDTH IFRAME RELAYS ──
   {
-    id: 'vidlink', name: 'VidLink PRO', badge: '⚡', type: 'iframe',
+    id: 'vidlink', name: 'VidLink PRO', badge: '⚡', type: 'iframe', tier: 2,
     reliability: 98.7, baseLatency: 42, isAdFree: true, hasSubtitles: true, maxQuality: '8K',
     tags: ['Ultra Fast', 'Ad-Free', 'VTT Buffers'], regionData: 'US-EAST', 
     build: (t, id, s, e) => t === 'movie' ? `https://vidlink.pro/movie/${sanitize(id)}?primaryColor=6366f1` : `https://vidlink.pro/tv/${sanitize(id)}/${sanitize(s)}/${sanitize(e)}?primaryColor=6366f1`
   },
   {
-    id: 'vidsrcpro', name: 'VidSrc PRO', badge: '🔥', type: 'iframe',
+    id: 'vidsrcpro', name: 'VidSrc PRO', badge: '🔥', type: 'iframe', tier: 2,
     reliability: 99.2, baseLatency: 38, isAdFree: false, hasSubtitles: true, maxQuality: '4K',
     tags: ['Premium API', 'Multi-Audio'], regionData: 'EU-WEST', 
     build: (t, id, s, e) => t === 'movie' ? `https://vidsrc.pro/embed/movie/${sanitize(id)}` : `https://vidsrc.pro/embed/tv/${sanitize(id)}/${sanitize(s)}/${sanitize(e)}`
   },
   {
-    id: 'flixhq', name: 'FlixHQ Quantum', badge: '🎥', type: 'iframe',
+    id: 'flixhq', name: 'FlixHQ Quantum', badge: '🎥', type: 'iframe', tier: 2,
     reliability: 98.1, baseLatency: 45, isAdFree: false, hasSubtitles: true, maxQuality: '1080p',
     tags: ['Next-Gen Scraper', 'Fast DNS'], regionData: 'US-WEST', 
     build: (t, id, s, e) => t === 'movie' ? `https://flixhq.fun/embed/movie/${sanitize(id)}` : `https://flixhq.fun/embed/tv/${sanitize(id)}/${sanitize(s)}/${sanitize(e)}`
@@ -104,37 +104,37 @@ export const SERVERS: ServerNode[] =[
 
   // ── TIER 3: AGGRESSIVE SCRAPERS & REDUNDANCIES ──
   {
-    id: 'goku', name: 'Goku Node', badge: '🐉', type: 'iframe',
+    id: 'goku', name: 'Goku Node', badge: '🐉', type: 'iframe', tier: 3,
     reliability: 97.0, baseLatency: 52, isAdFree: false, hasSubtitles: true, maxQuality: '1080p',
     tags: ['Deep Crawler'], regionData: 'ASIA-PAC', 
     build: (t, id, s, e) => t === 'movie' ? `https://goku.sx/embed/movie/${sanitize(id)}` : `https://goku.sx/embed/tv/${sanitize(id)}/${sanitize(s)}/${sanitize(e)}`
   },
   {
-    id: 'sora', name: 'Sora Relay', badge: '☁️', type: 'iframe',
+    id: 'sora', name: 'Sora Relay', badge: '☁️', type: 'iframe', tier: 3,
     reliability: 96.5, baseLatency: 60, isAdFree: false, hasSubtitles: false, maxQuality: '720p',
     tags: ['Lightweight', 'Anti-Throttle'], regionData: 'EU-CEN', 
     build: (t, id, s, e) => t === 'movie' ? `https://sora.world/embed/movie/${sanitize(id)}` : `https://sora.world/embed/tv/${sanitize(id)}/${sanitize(s)}/${sanitize(e)}`
   },
   {
-    id: 'vidsrccc', name: 'VidSrc CC', badge: '🌐', type: 'iframe',
+    id: 'vidsrccc', name: 'VidSrc CC', badge: '🌐', type: 'iframe', tier: 3,
     reliability: 97.4, baseLatency: 58, isAdFree: false, hasSubtitles: true, maxQuality: '1080p',
     tags:['Load Balanced'], regionData: 'GLOBAL', 
     build: (t, id, s, e) => t === 'movie' ? `https://vidsrc.cc/v2/embed/movie/${sanitize(id)}` : `https://vidsrc.cc/v2/embed/tv/${sanitize(id)}/${sanitize(s)}/${sanitize(e)}`
   },
   {
-    id: 'superembed', name: 'SuperEmbed Flux', badge: '🎇', type: 'iframe',
+    id: 'superembed', name: 'SuperEmbed Flux', badge: '🎇', type: 'iframe', tier: 3,
     reliability: 96.0, baseLatency: 65, isAdFree: false, hasSubtitles: false, maxQuality: '1080p',
     tags: ['Aggregator'], regionData: 'US-CEN', 
     build: (t, id, s, e) => t === 'movie' ? `https://multiembed.mov/directstream.php?video_id=${sanitize(id)}&tmdb=1` : `https://multiembed.mov/directstream.php?video_id=${sanitize(id)}&tmdb=1&s=${sanitize(s)}&e=${sanitize(e)}`
   },
   {
-    id: 'autoembed', name: 'AutoEmbed Matrix', badge: '💠', type: 'iframe',
+    id: 'autoembed', name: 'AutoEmbed Matrix', badge: '💠', type: 'iframe', tier: 4,
     reliability: 94.5, baseLatency: 90, isAdFree: false, hasSubtitles: false, maxQuality: '720p',
     tags: ['Legacy Backup'], regionData: 'UK-LON', 
     build: (t, id, s, e) => t === 'movie' ? `https://autoembed.co/movie/tmdb/${sanitize(id)}` : `https://autoembed.co/tv/tmdb/${sanitize(id)}-${sanitize(s)}-${sanitize(e)}`
   },
   {
-    id: 'moviekik', name: 'MovieKik Relay', badge: '🎬', type: 'iframe',
+    id: 'moviekik', name: 'MovieKik Relay', badge: '🎬', type: 'iframe', tier: 4,
     reliability: 90.0, baseLatency: 120, isAdFree: false, hasSubtitles: false, maxQuality: 'CAM',
     tags: ['Last Resort', 'Old Content'], regionData: 'UNKNOWN', 
     build: (t, id, s, e) => t === 'movie' ? `https://moviekik.com/embed/movie/${sanitize(id)}` : `https://moviekik.com/embed/tv/${sanitize(id)}/${sanitize(s)}/${sanitize(e)}`
