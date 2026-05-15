@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   webpack: (config, { isServer }) => {
     if (!isServer) {
-        // Prevents Next 14 from crashing when client-side imports use Node APIs
+        // Prevents Next.js Webpack 5 from crashing when client-side imports use Node APIs
         config.resolve.fallback = {
             ...config.resolve.fallback,
             fs: false,
