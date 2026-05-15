@@ -47,7 +47,7 @@ export function CommandPalette({ isOpen, onClose }: { isOpen: boolean, onClose: 
       const timer = setTimeout(() => {
         fetch(`/api/tmdb?endpoint=/search/multi&query=${encodeURIComponent(query)}`)
           .then(r => r.json())
-          .then(d => setResults(d.results?.filter((r: any) => r.media_type !== 'person').slice(0, 6) || []))
+          .then((d: any) => setResults(d.results?.filter((r: any) => r.media_type !== 'person').slice(0, 6) || []))
           .finally(() => setLoading(false));
       }, 300);
       return () => clearTimeout(timer);
@@ -113,7 +113,7 @@ export function CommandPalette({ isOpen, onClose }: { isOpen: boolean, onClose: 
             <div className="max-h-[60vh] overflow-y-auto p-2 custom-scrollbar">
               {loading && <div className="p-4 text-center text-gray-400">Loading...</div>}
               {!loading && activeList.length === 0 && <div className="p-4 text-center text-gray-500">No results found.</div>}
-              {activeList.map((item, i) => (
+              {activeList.map((item: any, i: number) => (
                 <motion.div
                   key={item.id}
                   onClick={() => onSelect(item, activeTab)}
