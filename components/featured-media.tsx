@@ -46,7 +46,7 @@ export default async function FeaturedMedia() {
   const filtered = trending.results
     .slice(0, 10)
     .filter(
-      (item): item is MediaItem & { media_type: string } => !!item.media_type,
+      (item: any): item is MediaItem & { media_type: string } => !!item.media_type,
     )
   if (filtered.length === 0) return null
   const index = getDeterministicIndex(filtered.length)
