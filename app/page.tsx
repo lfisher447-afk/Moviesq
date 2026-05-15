@@ -303,7 +303,7 @@ function ContentRow({ config, data }: { config: typeof SECTION_CONFIGS[0]; data:
   const checkScroll = useCallback(()=>{
     const el=rowRef.current; if(!el) return;
     setCanScrollLeft(el.scrollLeft>0);
-    setCanScrollRight(el.scrollLeft<el.scrollWidth-el.clientWidth-10);
+    setCanScrollRight(el.scrollLeft<el.scrollWidth-el.clientWidth-1);
   },[]);
 
   const scroll=(dir:'left'|'right')=>{
@@ -768,4 +768,4 @@ export default function Home() {
       </AnimatePresence>
     </div>
   );
-}
+                }
